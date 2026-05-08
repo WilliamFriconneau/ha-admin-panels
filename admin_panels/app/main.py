@@ -6,6 +6,7 @@ import asyncio
 import json
 import logging
 import os
+import posixpath
 import re
 from pathlib import Path
 from typing import Any
@@ -176,7 +177,7 @@ _ATTR_RE = re.compile(rb'(\b(?:href|src|action|formaction|data-src)\s*=\s*)(["\'
 _CSS_URL_RE = re.compile(rb'url\((["\']?)(/(?!/)[^)"\']*)\1\)')
 
 
-def _rewrite_html(body: bytes, base_path: str, idx: int) -> bytes:
+def _rewrite_html(body: bytes, base_path: str, idx: int, final_base_href: str = "") -> bytes:
     base_b = base_path.rstrip("/").encode("utf-8")
 
     def attr_sub(m: re.Match[bytes]) -> bytes:
@@ -185,11 +186,15 @@ def _rewrite_html(body: bytes, base_path: str, idx: int) -> bytes:
     body = _ATTR_RE.sub(attr_sub, body)
     body = _CSS_URL_RE.sub(lambda m: b"url(" + m.group(1) + base_b + m.group(2) + m.group(1) + b")", body)
 
-    script = _INJECTED_SCRIPT_TEMPLATE.replace("__IDX__", str(idx)).encode("utf-8")
+    head_inject = b""
+    if final_base_href:
+        head_inject += b'<base href="' + final_base_href.encode("utf-8") + b'">'
+    head_inject += _INJECTED_SCRIPT_TEMPLATE.replace("__IDX__", str(idx)).encode("utf-8")
+
     if b"<head" in body:
-        body = re.sub(rb"(<head\b[^>]*>)", rb"\1" + script, body, count=1, flags=re.IGNORECASE)
+        body = re.sub(rb"(<head\b[^>]*>)", rb"\1" + head_inject, body, count=1, flags=re.IGNORECASE)
     else:
-        body = script + body
+        body = head_inject + body
     return body
 
 
@@ -230,7 +235,8 @@ async def proxy(idx: int, path: str, request: Request) -> Response:
         async with httpx.AsyncClient(
             timeout=httpx.Timeout(30.0, connect=REQUEST_TIMEOUT),
             verify=panel["verify_tls"],
-            follow_redirects=False,
+            follow_redirects=True,
+            max_redirects=10,
         ) as client:
             upstream = await client.request(
                 request.method,
@@ -238,6 +244,8 @@ async def proxy(idx: int, path: str, request: Request) -> Response:
                 content=body if body else None,
                 headers=upstream_headers,
             )
+    except httpx.TooManyRedirects:
+        raise HTTPException(status_code=502, detail="Upstream redirect loop") from None
     except httpx.TimeoutException:
         raise HTTPException(status_code=504, detail="Upstream timeout") from None
     except httpx.ConnectError as e:
@@ -248,16 +256,23 @@ async def proxy(idx: int, path: str, request: Request) -> Response:
     content_type = upstream.headers.get("content-type", "")
     body_out = upstream.content
 
+    final_path = upstream.url.path or "/"
+    final_dir = posixpath.dirname(final_path)
+    if not final_dir.endswith("/"):
+        final_dir += "/"
+    final_base_href = base_path.rstrip("/") + final_dir
+
     if "text/html" in content_type:
-        body_out = _rewrite_html(body_out, base_path, idx)
+        body_out = _rewrite_html(body_out, base_path, idx, final_base_href)
     elif "text/css" in content_type:
         body_out = _rewrite_css(body_out, base_path)
 
     response_headers = {}
     for k, v in upstream.headers.items():
-        if k.lower() in HOP_BY_HOP:
+        kl = k.lower()
+        if kl in HOP_BY_HOP:
             continue
-        if k.lower() == "location":
+        if kl == "location":
             v = _rewrite_redirect(v, panel["url"], base_path)
         response_headers[k] = v
 
