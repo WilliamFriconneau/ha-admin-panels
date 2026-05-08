@@ -1,5 +1,5 @@
 name: Admin Panels
-version: "0.1.0"
+version: "0.1.1"
 slug: admin_panels
 description: Lightweight launcher for admin web UIs (router, NAS, IoT bridges...) with reverse proxy via HA ingress.
 url: https://github.com/WilliamFriconneau/ha-admin-panels

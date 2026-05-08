@@ -80,6 +80,11 @@ NORMALIZED = [_normalize_panel(p) for p in PANELS]
 # ---------------------------------------------------------------------------
 
 
+def _ingress_prefix(request: Request) -> str:
+    """Return the absolute ingress path prefix HA assigns to this addon, or ''."""
+    return request.headers.get("x-ingress-path", "").rstrip("/")
+
+
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
@@ -88,6 +93,7 @@ async def index(request: Request) -> HTMLResponse:
             "request": request,
             "panels": NORMALIZED,
             "ping_interval": PING_INTERVAL,
+            "ingress_path": _ingress_prefix(request),
         },
     )
 
@@ -207,7 +213,8 @@ async def proxy(idx: int, path: str, request: Request) -> Response:
     if request.url.query:
         target += "?" + request.url.query
 
-    base_path = f"/proxy/{idx}/"
+    ingress = _ingress_prefix(request)
+    base_path = f"{ingress}/proxy/{idx}/"
 
     upstream_headers = {}
     for k, v in request.headers.items():
