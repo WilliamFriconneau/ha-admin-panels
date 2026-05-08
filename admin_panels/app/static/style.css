@@ -107,10 +107,21 @@ main {
     border-radius: 10px;
 }
 
-.tile-newtab {
+.tile-actions {
     position: absolute;
     top: 8px;
     right: 8px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+.tile:hover .tile-actions {
+    opacity: 1;
+}
+
+.tile-action {
     width: 28px;
     height: 28px;
     border-radius: 6px;
@@ -122,18 +133,17 @@ main {
     align-items: center;
     justify-content: center;
     font-size: 16px;
-    opacity: 0;
-    transition: opacity 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
 }
 
-.tile:hover .tile-newtab {
-    opacity: 1;
-}
-
-.tile-newtab:hover {
+.tile-action:hover {
     background: var(--surface-2);
     color: var(--accent);
     border-color: var(--border);
+}
+
+.tile-direct:hover {
+    color: var(--ok);
 }
 
 .tile-icon {

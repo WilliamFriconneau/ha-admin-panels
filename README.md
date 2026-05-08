@@ -79,9 +79,26 @@ it rewrites absolute paths (`href`, `src`, `action`, `url(...)`) to keep them in
 the proxy scope, and injects a tiny script that intercepts `fetch` and `XMLHttpRequest`
 to rewrite absolute paths in JS-driven calls.
 
-> **Caveats** — pages relying on WebSockets or hard-coded full URLs (`http://host/...`)
-> may not work end-to-end. The add-on targets typical SPA admin panels that issue
-> requests to root-relative paths (`/api/...`).
+> **Caveats**
+>
+> - **Reverse proxy is best-effort.** Pages relying on WebSockets, hard-coded
+>   absolute URLs (`http://host/...`), CSRF tokens tied to the original origin,
+>   or aggressive XHR-prototype caching (some legacy SPAs like OpenWrt LuCI,
+>   Freebox AngularJS UI) may misbehave.
+> - **Password managers (Bitwarden, 1Password...) won't autofill** on the
+>   proxied URL because it is on `*.ui.nabu.casa` (or your HA hostname), not
+>   on the original LAN IP. Workaround: add the proxy URL as an additional
+>   URI on the corresponding vault entry, **or use the "Open direct" tile
+>   button** when on the same LAN as the upstream device.
+> - **WebSocket upgrades** are not proxied (HTTP only). The addon logs a
+>   warning when this happens.
+>
+> Each tile has two icon buttons that appear on hover:
+> - 🌐 *Open direct* — opens the upstream URL bypassing the proxy. Full SPA
+>   functionality, password manager autofill works, but only when you can
+>   reach the upstream IP from your browser (LAN, VPN, Tailscale).
+> - ↗ *Open via proxy* — opens through the addon proxy. Works remotely via
+>   Nabu Casa or any external HA URL.
 
 ## Development
 
