@@ -84,15 +84,10 @@ main {
 }
 
 .tile {
-    display: flex;
-    align-items: stretch;
-    gap: 14px;
-    padding: 16px;
+    position: relative;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 10px;
-    text-decoration: none;
-    color: var(--text);
     transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
 }
 
@@ -100,6 +95,45 @@ main {
     transform: translateY(-1px);
     border-color: var(--accent);
     background: var(--surface-2);
+}
+
+.tile-main {
+    display: flex;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+    text-decoration: none;
+    color: var(--text);
+    border-radius: 10px;
+}
+
+.tile-newtab {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    opacity: 0;
+    transition: opacity 0.12s, background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.tile:hover .tile-newtab {
+    opacity: 1;
+}
+
+.tile-newtab:hover {
+    background: var(--surface-2);
+    color: var(--accent);
+    border-color: var(--border);
 }
 
 .tile-icon {

@@ -26,19 +26,24 @@
         {% else %}
         <div class="grid">
             {% for p in panels %}
-            <a class="tile" data-idx="{{ loop.index0 }}" href="proxy/{{ loop.index0 }}/" target="_blank" rel="noopener">
-                <div class="tile-icon">
-                    <span class="mdi {{ ('mdi-' + p.icon[4:]) if p.icon.startswith('mdi:') else 'mdi-web' }}"></span>
-                </div>
-                <div class="tile-body">
-                    <div class="tile-name">{{ p.name }}</div>
-                    <div class="tile-url">{{ p.url }}</div>
-                    <div class="tile-status status-pending" data-status="{{ loop.index0 }}">
-                        <span class="dot"></span>
-                        <span class="label">Checking…</span>
+            <div class="tile" data-idx="{{ loop.index0 }}">
+                <a class="tile-main" href="proxy/{{ loop.index0 }}/">
+                    <div class="tile-icon">
+                        <span class="mdi {{ ('mdi-' + p.icon[4:]) if p.icon.startswith('mdi:') else 'mdi-web' }}"></span>
                     </div>
-                </div>
-            </a>
+                    <div class="tile-body">
+                        <div class="tile-name">{{ p.name }}</div>
+                        <div class="tile-url">{{ p.url }}</div>
+                        <div class="tile-status status-pending" data-status="{{ loop.index0 }}">
+                            <span class="dot"></span>
+                            <span class="label">Checking…</span>
+                        </div>
+                    </div>
+                </a>
+                <button class="tile-newtab" type="button" data-idx="{{ loop.index0 }}" title="Open in new tab">
+                    <span class="mdi mdi-open-in-new"></span>
+                </button>
+            </div>
             {% endfor %}
         </div>
         {% endif %}
@@ -51,6 +56,18 @@
     <script>
     (function() {
         const PING_INTERVAL_MS = {{ ping_interval }} * 1000;
+
+        function absoluteProxyUrl(idx) {
+            return new URL("proxy/" + idx + "/", document.baseURI).href;
+        }
+
+        document.querySelectorAll('.tile-newtab').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(absoluteProxyUrl(btn.dataset.idx), '_blank', 'noopener');
+            });
+        });
 
         async function refresh() {
             try {
