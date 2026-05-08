@@ -69,11 +69,14 @@ def _normalize_panel(p: dict[str, Any]) -> dict[str, Any]:
         "name": p.get("name", "Untitled"),
         "url": (p.get("url") or "").rstrip("/"),
         "icon": p.get("icon") or "mdi:web",
-        "verify_tls": bool(p.get("verify_tls", True)),
+        "verify_tls": bool(p.get("verify_tls", False)),
     }
 
 
 NORMALIZED = [_normalize_panel(p) for p in PANELS]
+
+for i, p in enumerate(NORMALIZED):
+    log.info("  panel[%d] name=%r url=%r verify_tls=%s", i, p["name"], p["url"], p["verify_tls"])
 
 
 # ---------------------------------------------------------------------------
@@ -228,6 +231,8 @@ async def proxy(idx: int, path: str, request: Request) -> Response:
             continue
         upstream_headers[k] = v
     upstream_headers["accept-encoding"] = "identity"
+    if "upgrade" in request.headers and request.headers.get("upgrade", "").lower() == "websocket":
+        log.warning("WebSocket upgrade requested for panel %d (%s) — HTTP proxy only, may not work", idx, panel["name"])
 
     body = await request.body()
 

@@ -64,7 +64,7 @@ request_timeout: 5
 | `panels[].name`     | string  | —       | Display name shown on the tile.                        |
 | `panels[].url`      | url     | —       | Upstream base URL (scheme + host + optional port).     |
 | `panels[].icon`     | string  | `mdi:web` | Material Design Icon identifier (e.g. `mdi:server`). |
-| `panels[].verify_tls` | bool  | `true`  | Set to `false` to accept self-signed TLS upstreams.    |
+| `panels[].verify_tls` | bool  | `false` | Set to `true` to enforce TLS cert verification (LAN admin UIs are usually self-signed, hence the relaxed default). |
 | `ping_interval`     | int     | `30`    | Seconds between status refreshes (5–3600).             |
 | `request_timeout`   | int     | `5`     | Per-ping HTTP timeout in seconds (1–60).               |
 
