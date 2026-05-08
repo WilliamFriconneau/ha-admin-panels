@@ -1,0 +1,8 @@
+{
+  "panels": [
+    { "name": "Demo Site", "url": "http://example.com", "icon": "mdi:web" },
+    { "name": "HTTPBin",   "url": "https://httpbin.org", "icon": "mdi:http" }
+  ],
+  "ping_interval": 30,
+  "request_timeout": 5
+}

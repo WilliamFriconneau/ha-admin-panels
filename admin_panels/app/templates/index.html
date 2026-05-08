@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panels</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" crossorigin="anonymous">
+</head>
+<body>
+    <header>
+        <h1>Admin Panels</h1>
+        <button id="refresh-btn" type="button" title="Refresh status">
+            <span class="mdi mdi-refresh"></span>
+        </button>
+    </header>
+
+    <main>
+        {% if panels|length == 0 %}
+        <div class="empty">
+            <span class="mdi mdi-cog-outline"></span>
+            <p>No panels configured.</p>
+            <p>Open the addon configuration tab and add panels with a name and URL.</p>
+        </div>
+        {% else %}
+        <div class="grid">
+            {% for p in panels %}
+            <a class="tile" data-idx="{{ loop.index0 }}" href="proxy/{{ loop.index0 }}/" target="_blank" rel="noopener">
+                <div class="tile-icon">
+                    <span class="mdi {{ ('mdi-' + p.icon[4:]) if p.icon.startswith('mdi:') else 'mdi-web' }}"></span>
+                </div>
+                <div class="tile-body">
+                    <div class="tile-name">{{ p.name }}</div>
+                    <div class="tile-url">{{ p.url }}</div>
+                    <div class="tile-status status-pending" data-status="{{ loop.index0 }}">
+                        <span class="dot"></span>
+                        <span class="label">Checking…</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </main>
+
+    <footer>
+        <span>Admin Panels addon · status refresh every {{ ping_interval }}s</span>
+    </footer>
+
+    <script>
+    (function() {
+        const PING_INTERVAL_MS = {{ ping_interval }} * 1000;
+
+        async function refresh() {
+            try {
+                const res = await fetch("api/ping", { cache: "no-store" });
+                if (!res.ok) throw new Error("ping " + res.status);
+                const data = await res.json();
+                for (const item of data) {
+                    const el = document.querySelector('[data-status="' + item.idx + '"]');
+                    if (!el) continue;
+                    el.classList.remove("status-pending", "status-ok", "status-down");
+                    if (item.ok) {
+                        el.classList.add("status-ok");
+                        el.querySelector(".label").textContent = "Online (" + item.status + ")";
+                    } else {
+                        el.classList.add("status-down");
+                        el.querySelector(".label").textContent = item.error || "Offline";
+                    }
+                }
+            } catch (e) {
+                console.warn("ping refresh failed", e);
+            }
+        }
+
+        document.getElementById("refresh-btn")?.addEventListener("click", refresh);
+        refresh();
+        setInterval(refresh, PING_INTERVAL_MS);
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,33 @@
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude / AI assistants
+.claude/
+CLAUDE.md
+**/CLAUDE.md
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Local secrets / configs
+*.local
+.env
+.env.*
+options.json
+
+# Build artifacts
+build/
+dist/
